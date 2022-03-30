@@ -1,0 +1,4 @@
+/data/*.csv
+/data/*.pkl
+*.pkl
+/20200705v1/full/metadata/*.jsonl
