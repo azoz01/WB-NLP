@@ -2,3 +2,5 @@
 /data/*.pkl
 *.pkl
 /20200705v1/full/metadata/*.jsonl
+/20200705v1/full/metadata/*.gz
+
