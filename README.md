@@ -6,7 +6,7 @@ To obtain raw data in `.jsonl` format use
 ```
 bin/download_meta_shard.sh
 ```
-T obtain sample, responses from Altmetric and sample merged with altmetric (Only records with positive responses included) use
+To obtain sample, responses from Altmetric, responses from OpenAlex and sample merged with altmetric and OpenAlex (Only records with positive responses included) use
 ```
 bin/download_processed.sh
 ```
