@@ -1,6 +1,3 @@
 #!/bin/bash
 
-wget -O data/df_all.csv 'https://www.dropbox.com/s/7jjod7bvazwctpk/df_all.csv'
-
-
-
+wget -O data/df_all.csv 'https://www.dropbox.com/s/ww97xw1lp5701f6/df_all.csv'
