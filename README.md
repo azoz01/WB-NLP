@@ -2,7 +2,6 @@
 Project for NLP workshops
 
 ## Getting data
-<<<<<<< HEAD
 Get raw s2orc ai papers
 ```
 wget -O data/s2orc_ai.csv 'https://www.dropbox.com/s/429hn96clxs8y5s/s2orc_ai.csv'
