@@ -1,4 +1,5 @@
 import json
+import ast
 import pickle as pkl
 import pandas as pd
 import numpy as np
@@ -58,6 +59,7 @@ def get_altmetric_response(row):
 def main():
 
     df = pd.read_csv('data/s2orc_ai.csv')
+    df["mag_field_of_study"] = df["mag_field_of_study"].fillna("['Missing']").apply(ast.literal_eval)
 
     print('Filtering empty ids')
 
@@ -65,7 +67,9 @@ def main():
                   & df['arxiv_id'].isna())]
 
     print('Getting Altmetrics responses')
-    responses = df.progress_apply(get_altmetric_response, axis='columns')
+    # responses = df.progress_apply(get_altmetric_response, axis='columns')
+    with open('data/altmetrics_responses.pkl', 'rb') as f:
+        responses = pkl.load(f)
 
     print('Saving responses to pickle')
     with open('data/altmetrics_responses.pkl', 'wb') as f:
@@ -103,7 +107,8 @@ def main():
     df_with_altmetric['mag_field_of_study'] = df_with_altmetric['mag_field_of_study'].apply(
         lambda x: ['None'] if not x else x)
 
-    df_with_altmetric.to_csv('data/data_with_altmetric.csv')
+    with open('data/data_with_altmetric.pkl', 'wb') as f:
+        pkl.dump(df_with_altmetric, f)
 
 
 if __name__ == '__main__':

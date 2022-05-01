@@ -2,11 +2,23 @@
 Project for NLP workshops
 
 ## Getting data
-To obtain raw data in `.jsonl` format use
+Get raw s2orc ai papers
 ```
-bin/download_meta_shard.sh
+wget -O data/s2orc_ai.csv 'https://www.dropbox.com/s/429hn96clxs8y5s/s2orc_ai.csv'
 ```
-To obtain sample, responses from Altmetric, responses from OpenAlex and sample merged with altmetric and OpenAlex (Only records with positive responses included) use
+Get altmetric raw responses
 ```
-bin/download_processed.sh
+wget -O data/altmetric_responses.pkl 'https://www.dropbox.com/s/om9e75l79dq3j0t/altmetrics_responses.pkl'
+```
+Get openalex raw responses
+```
+wget -O data/openalex_raw_responses.pkl 'https://www.dropbox.com/s/1ie6phrex0bzi8o/openalex_raw_responses.pkl'
+```
+Get train data
+```
+gdown -O data/train_data.pkl 11KdFaGCUO19fPDqYCuce2vjz9AxUxDt9
+```
+Get test data
+```
+gdown -O data/test_data.pkl 1TLPQbYnkmpnVGkd5VaZnlp8aaJF21Aw3
 ```
