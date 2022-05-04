@@ -16,9 +16,9 @@ wget -O data/openalex_raw_responses.pkl 'https://www.dropbox.com/s/1ie6phrex0bzi
 ```
 Get train data
 ```
-gdown -O data/train_data.pkl 11KdFaGCUO19fPDqYCuce2vjz9AxUxDt9
+gdown -O data/train_data.pkl 1i9VGVhDOdQztHCtSLWMVBiqIQYY_Fmz-
 ```
 Get test data
 ```
-gdown -O data/test_data.pkl 1i9VGVhDOdQztHCtSLWMVBiqIQYY_Fmz-
+gdown -O data/test_data.pkl 1pZjfMG_12oEJ-VSsOKHM4n_kESfkwN35
 ```
