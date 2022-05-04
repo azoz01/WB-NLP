@@ -31,35 +31,35 @@ class RawDataToVec(TransformerMixin):
 
     def fit(self, X, y=None, **kwargs):
         X = X.reset_index(drop=True)
-        self.ap.fit(X)
+        self.ap.fit(X, y)
         # Potrzebne, zeby pipeline filtrujacy zadzialal
         X["journal"] = X["journal"].fillna("No Journal")
         X["journal"] = X["journal"].apply(lambda j: [j])
-        self.rvfcr.fit(X)
-        self.mlbmc.fit(X)
-        X = self.rvfcr.transform(X)
-        X = self.mlbmc.transform(X)
+        self.rvfcr.fit(X, y)
+        self.mlbmc.fit(X, y)
+        X, y = self.rvfcr.transform(X, y)
+        X, y = self.mlbmc.transform(X, y)
         # Potrzebne, zeby kolejny pipeline zadzialal
         X["journal"] = X["journal"].apply(lambda l: l[0])
-        self.ohemc.fit(X)
-        X = self.ohemc.transform(X)
-        self.df2vec.fit(X)
+        self.ohemc.fit(X, y)
+        X, y = self.ohemc.transform(X, y)
+        self.df2vec.fit(X, y)
         return self
 
     def transform(self, X, y=None, **kwargs):
         X = X.reset_index(drop=True)
-        X = self.ap.transform(X)
+        X, y = self.ap.transform(X, y)
         # Potrzebne, zeby pipeline filtrujacy zadzialal
         X["journal"] = X["journal"].fillna("No Journal")
         X["journal"] = X["journal"].apply(lambda j: [j])
-        X = self.rvfcr.transform(X)
-        X = self.mlbmc.transform(X)
+        X, y = self.rvfcr.transform(X, y)
+        X, y = self.mlbmc.transform(X, y)
         # Potrzebne, zeby kolejny pipeline zadzialal
         X["journal"] = X["journal"].apply(lambda l: l[0])
-        X = self.ohemc.transform(X)
+        X, y = self.ohemc.transform(X, y)
         X.is_open_access = X.is_open_access.astype(int)
-        X = self.df2vec.transform(X)
-        return X
+        X, y = self.df2vec.transform(X, y)
+        return X, y
 
 
 class AbstractToVecTransformer(TransformerMixin):
@@ -68,7 +68,9 @@ class AbstractToVecTransformer(TransformerMixin):
 
     def fit(self, X, y=None, **kwargs):
         print("Fit: converting abstract to docs")
-        abstract_tokens = X["abstract"].swifter.apply(self._abstract_to_token_list)
+        abstract_tokens = X["abstract"].swifter.apply(
+            self._abstract_to_token_list
+        )
         print("Fit: getting unique tokens from dataset")
         flatenned_tokens = list(chain(abstract_tokens))
         unique_tokens = np.unique(flatenned_tokens)
@@ -77,7 +79,8 @@ class AbstractToVecTransformer(TransformerMixin):
             list(
                 map(
                     partial(
-                        self._abstracts_with_token_count, abstracts_col=abstract_tokens
+                        self._abstracts_with_token_count,
+                        abstracts_col=abstract_tokens,
                     ),
                     unique_tokens,
                 )
@@ -91,21 +94,29 @@ class AbstractToVecTransformer(TransformerMixin):
             self._drop_too_frequent_and_too_rare
         )
         print("Fit: fitting tf-idf")
-        abstract_tokens = abstract_tokens.swifter.apply(self._merge_token_list_to_text)
+        abstract_tokens = abstract_tokens.swifter.apply(
+            self._merge_token_list_to_text
+        )
         self.tfidf = TfidfVectorizer()
         self.tfidf.fit(abstract_tokens)
 
         return self
 
     def transform(self, X, y=None, **kwargs):
-        abstract_col = X["abstract"].swifter.apply(self._abstract_to_token_list)
-        abstract_col = abstract_col.swifter.apply(self._drop_too_frequent_and_too_rare)
-        abstract_col = abstract_col.swifter.apply(self._merge_token_list_to_text)
+        abstract_col = X["abstract"].swifter.apply(
+            self._abstract_to_token_list
+        )
+        abstract_col = abstract_col.swifter.apply(
+            self._drop_too_frequent_and_too_rare
+        )
+        abstract_col = abstract_col.swifter.apply(
+            self._merge_token_list_to_text
+        )
         X = X.copy()
         X["abstract_encoded"] = abstract_col.swifter.apply(
             lambda l: self.tfidf.transform([l])
         )
-        return X
+        return X, y
 
     def _abstract_to_token_list(self, abstract):
         doc = self.en(abstract)
@@ -157,10 +168,13 @@ class RareValuesFromColumnsRemover(TransformerMixin):
         for column in self.columns:
             X[column] = X[column].swifter.apply(
                 lambda l: np.unique(
-                    [self.columns_to_mapping[column].get(el, "other") for el in l]
+                    [
+                        self.columns_to_mapping[column].get(el, "other")
+                        for el in l
+                    ]
                 )
             )
-        return X
+        return X, y
 
 
 class MultilabelBinarizerMulticolumn(TransformerMixin):
@@ -171,6 +185,7 @@ class MultilabelBinarizerMulticolumn(TransformerMixin):
         self.binarizers = dict()
         for col in self.columns:
             print(f"Removing NAs from {col}")
+            y = y.loc[~X[col].isna().values]
             X = X.loc[~X[col].isna()]
             mlb = MultiLabelBinarizer()
             mlb.fit(X[col])
@@ -181,11 +196,12 @@ class MultilabelBinarizerMulticolumn(TransformerMixin):
         X = X.copy()
         for col in self.columns:
             print(f"Removing NAs from {col}")
+            y = y.loc[~X[col].isna().values]
             X = X.loc[~X[col].isna()]
             col_transformed = self.binarizers[col].transform(X[col])
             col_transformed = list(map(np.array, col_transformed.tolist()))
             X[f"{col}_encoded"] = col_transformed
-        return X
+        return X, y
 
 
 class OnehotEncoderMulticolumn(TransformerMixin):
@@ -196,6 +212,7 @@ class OnehotEncoderMulticolumn(TransformerMixin):
         self.encoders = dict()
         for col in self.columns:
             print(f"Removing NAs from {col}")
+            y = y.loc[~X[col].isna().values]
             X = X.loc[~X[col].isna()]
             oh = OneHotEncoder(handle_unknown="ignore")
             column = pd.DataFrame(X[col])
@@ -208,12 +225,15 @@ class OnehotEncoderMulticolumn(TransformerMixin):
         for col in self.columns:
             print(f"LOOOG: {col}")
             print(f"Removing NAs from {col}")
+            y = y.loc[~X[col].isna().values]
             X = X.loc[~X[col].isna()]
             column = pd.DataFrame(X[col])
             col_transformed = self.encoders[col].transform(column)
-            col_transformed = list(map(np.array, col_transformed.todense().tolist()))
+            col_transformed = list(
+                map(np.array, col_transformed.todense().tolist())
+            )
             X[f"{col}_encoded"] = col_transformed
-        return X
+        return X, y
 
 
 class DfToFeatureVector(TransformerMixin):
@@ -277,7 +297,7 @@ class DfToFeatureVector(TransformerMixin):
         vals = np.stack(X.values, 0)
         df = pd.DataFrame(vals, columns=self.labels)
         df["abstract"] = abstract_col
-        return df
+        return df, y
 
     def _stack_row_into_vector(self, row):
         row["abstract_encoded"] = row["abstract_encoded"].toarray()[0]
@@ -289,6 +309,9 @@ class DfToFeatureVector(TransformerMixin):
         n = X[colname + "_encoded"][0].shape[0]
         m = np.eye(n, n)
         mlbmc_features = list(
-            map(lambda l: l[0], self.mlbmc.binarizers[colname].inverse_transform(m))
+            map(
+                lambda l: l[0],
+                self.mlbmc.binarizers[colname].inverse_transform(m),
+            )
         )
         return list(map(lambda s: colname + "_" + s, mlbmc_features))
