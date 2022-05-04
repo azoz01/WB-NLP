@@ -20,5 +20,5 @@ gdown -O data/train_data.pkl 11KdFaGCUO19fPDqYCuce2vjz9AxUxDt9
 ```
 Get test data
 ```
-gdown -O data/test_data.pkl 1TLPQbYnkmpnVGkd5VaZnlp8aaJF21Aw3
+gdown -O data/test_data.pkl 1i9VGVhDOdQztHCtSLWMVBiqIQYY_Fmz-
 ```
